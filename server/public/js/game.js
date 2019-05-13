@@ -23,6 +23,7 @@ function preload() {
   this.load.image("star", "assets/star.png");
   this.load.image("otherPlayer", "assets/bomb.png");
   this.load.image("sky", "assets/sky.png");
+  this.load.image("ground", "assets/platform.png");
 }
 
 function create() {
@@ -30,6 +31,19 @@ function create() {
   var self = this;
   this.socket = io();
   this.players = this.physics.add.group();
+
+  this.platforms = this.physics.add.staticGroup();
+
+  this.platforms
+    .create(400, 568, "ground")
+    .setScale(2)
+    .refreshBody();
+
+  this.platforms.create(600, 400, "ground");
+  this.platforms.create(50, 250, "ground");
+  this.platforms.create(750, 220, "ground");
+
+  this.physics.add.collider(this.players, this.platforms);
 
   this.blueScoreText = this.add.text(16, 16, "", {
     fontSize: "32px",
