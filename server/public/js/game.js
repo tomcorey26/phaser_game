@@ -22,9 +22,11 @@ var game = new Phaser.Game(config);
 function preload() {
   this.load.image("star", "assets/star.png");
   this.load.image("otherPlayer", "assets/bomb.png");
+  this.load.image("sky", "assets/sky.png");
 }
 
 function create() {
+  this.add.image(400, 300, "sky");
   var self = this;
   this.socket = io();
   this.players = this.physics.add.group();
