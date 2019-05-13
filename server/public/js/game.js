@@ -29,6 +29,15 @@ function create() {
   this.socket = io();
   this.players = this.physics.add.group();
 
+  this.blueScoreText = this.add.text(16, 16, "", {
+    fontSize: "32px",
+    fill: "#0000FF"
+  });
+  this.redScoreText = this.add.text(584, 16, "", {
+    fontSize: "32px",
+    fill: "#FF0000"
+  });
+
   this.socket.on("currentPlayers", function(players) {
     Object.keys(players).forEach(function(id) {
       if (players[id].playerId === self.socket.id) {
@@ -62,6 +71,19 @@ function create() {
     });
   });
   this.cursors = this.input.keyboard.createCursorKeys();
+
+  this.socket.on("updateScore", function(scores) {
+    self.blueScoreText.setText("Blue: " + scores.blue);
+    self.redScoreText.setText("Red: " + scores.red);
+  });
+
+  this.socket.on("starLocation", function(starLocation) {
+    if (!self.star) {
+      self.star = self.add.image(starLocation.x, starLocation.y, "star");
+    } else {
+      self.star.setPosition(starLocation.x, starLocation.y);
+    }
+  });
   this.leftKeyPressed = false;
   this.rightKeyPressed = false;
   this.upKeyPressed = false;
