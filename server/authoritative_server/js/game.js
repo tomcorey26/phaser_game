@@ -22,6 +22,7 @@ const config = {
 
 function preload() {
   this.load.image("star", "assets/star.png");
+  this.load.image("ground", "assets/platform.png");
 }
 
 function create() {
@@ -39,6 +40,19 @@ function create() {
     "star"
   );
   this.physics.add.collider(this.players);
+
+  this.platforms = this.physics.add.staticGroup();
+
+  this.platforms
+    .create(400, 568, "ground")
+    .setScale(2)
+    .refreshBody();
+
+  this.platforms.create(300, 400, "ground");
+  this.platforms.create(50, 250, "ground");
+  this.platforms.create(750, 220, "ground");
+
+  this.physics.add.collider(this.platforms, this.players);
 
   this.physics.add.overlap(this.players, this.star, function(star, player) {
     if (players[player.playerId].team === "red") {
