@@ -24,6 +24,10 @@ function preload() {
   this.load.image("otherPlayer", "assets/bomb.png");
   this.load.image("sky", "assets/sky.png");
   this.load.image("ground", "assets/platform.png");
+  this.load.spritesheet("dude", "assets/dude.png", {
+    frameWidth: 32,
+    frameHeight: 48
+  });
 }
 
 function create() {
@@ -52,12 +56,32 @@ function create() {
     fill: "#FF0000"
   });
 
+  this.anims.create({
+    key: "left",
+    frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
+    frameRate: 10,
+    repeat: -1
+  });
+
+  this.anims.create({
+    key: "turn",
+    frames: [{ key: "dude", frame: 4 }],
+    frameRate: 20
+  });
+
+  this.anims.create({
+    key: "right",
+    frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
+    frameRate: 10,
+    repeat: -1
+  });
+
   this.socket.on("currentPlayers", function(players) {
     Object.keys(players).forEach(function(id) {
       if (players[id].playerId === self.socket.id) {
-        displayPlayers(self, players[id], "star");
+        displayPlayers(self, players[id], "dude");
       } else {
-        displayPlayers(self, players[id], "otherPlayer");
+        displayPlayers(self, players[id], "dude");
       }
     });
   });
@@ -78,8 +102,14 @@ function create() {
     Object.keys(players).forEach(function(id) {
       self.players.getChildren().forEach(function(player) {
         if (players[id].playerId === player.playerId) {
-          player.setRotation(players[id].rotation);
           player.setPosition(players[id].x, players[id].y);
+          if (players[id].input.left) {
+            player.anims.play("left", true);
+          } else if (players[id].input.right) {
+            player.anims.play("right", true);
+          } else {
+            player.anims.play("turn");
+          }
         }
       });
     });
@@ -139,8 +169,7 @@ function update() {
 function displayPlayers(self, playerInfo, sprite) {
   const player = self.add
     .sprite(playerInfo.x, playerInfo.y, sprite)
-    .setOrigin(0.5, 0.5)
-    .setDisplaySize(53, 40);
+    .setOrigin(0.5, 0.5);
   if (playerInfo.team === "blue") player.setTint(0x0000ff);
   else player.setTint(0xff0000);
   player.playerId = playerInfo.playerId;

@@ -9,7 +9,7 @@ const config = {
     default: "arcade",
     arcade: {
       debug: false,
-      gravity: { y: 0 }
+      gravity: { y: 300 }
     }
   },
   scene: {
@@ -23,6 +23,10 @@ const config = {
 function preload() {
   this.load.image("star", "assets/star.png");
   this.load.image("ground", "assets/platform.png");
+  this.load.spritesheet("dude", "assets/dude.png", {
+    frameWidth: 32,
+    frameHeight: 48
+  });
 }
 
 function create() {
@@ -35,8 +39,8 @@ function create() {
   };
 
   this.star = this.physics.add.image(
-    randomPosition(700),
-    randomPosition(500),
+    randomPosition(400),
+    randomPosition(300),
     "star"
   );
   this.physics.add.collider(this.players);
@@ -54,13 +58,15 @@ function create() {
 
   this.physics.add.collider(this.platforms, this.players);
 
+  this.physics.add.collider(this.star, this.platforms);
+
   this.physics.add.overlap(this.players, this.star, function(star, player) {
     if (players[player.playerId].team === "red") {
       self.scores.red += 10;
     } else {
       self.scores.blue += 10;
     }
-    self.star.setPosition(randomPosition(700), randomPosition(500));
+    self.star.setPosition(randomPosition(400), randomPosition(300));
     io.emit("updateScore", self.scores);
     io.emit("starLocation", { x: self.star.x, y: self.star.y });
   });
@@ -68,7 +74,6 @@ function create() {
   io.on("connection", function(socket) {
     console.log("a user connected");
     players[socket.id] = {
-      rotation: 0,
       x: Math.floor(Math.random() * 700) + 50,
       y: Math.floor(Math.random() * 500) + 50,
       playerId: socket.id,
@@ -112,9 +117,9 @@ function addPlayer(self, playerInfo) {
     .image(playerInfo.x, playerInfo.y, "star")
     .setOrigin(0.5, 0.5)
     .setDisplaySize(53, 40);
-  player.setDrag(100);
-  player.setAngularDrag(100);
-  player.setMaxVelocity(200);
+  player.setBounce(0.2);
+  player.setCollideWorldBounds(true);
+  player.body.setGravityY(300);
   player.playerId = playerInfo.playerId;
   self.players.add(player);
 }
@@ -130,29 +135,22 @@ function update() {
   this.players.getChildren().forEach(player => {
     const input = players[player.playerId].input;
     if (input.left) {
-      player.setAngularVelocity(-300);
+      player.setVelocityX(-160);
     } else if (input.right) {
-      player.setAngularVelocity(300);
+      player.setVelocityX(160);
     } else {
-      player.setAngularVelocity(0);
+      player.setVelocityX(0);
     }
 
-    if (input.up) {
-      this.physics.velocityFromRotation(
-        player.rotation + 1.5,
-        200,
-        player.body.acceleration
-      );
-    } else {
-      player.setAcceleration(0);
+    if (input.up && player.body.touching.down) {
+      player.setVelocityY(-400);
     }
 
     players[player.playerId].x = player.x;
     players[player.playerId].y = player.y;
-    players[player.playerId].rotation = player.rotation;
   });
-  this.physics.world.wrap(this.players, 5);
   io.emit("playerUpdates", players);
+  io.emit("starLocation", { x: this.star.x, y: this.star.y });
 }
 
 function randomPosition(max) {
